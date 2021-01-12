@@ -1,0 +1,86 @@
+ $collecion = collect([]);
+                $filtros=collect(['nombre','estado']);
+               
+                
+                if($request->get('EnProceso')){
+                   $collecion->push( $filtros->combine(['En Proceso',true]));
+                   $proceso = 'En Proceso';
+                }else {
+                    $collecion->push( $filtros->combine(['En Proceso',false]));
+                    $proceso = '';
+                }
+                
+                if($request->get('Pendiente')){
+                    $collecion->push( $filtros->combine(['Pendiente',true]));
+                    $pendiente = 'Pendiente';
+                    $incidentes=DB::table('incidentes as i')
+                    ->join('users as u','i.reporter_id','=','u.id')
+                    ->select ( 'i.id','i.nombre','i.estado','i.caracter','u.name as usuario','u.id as idusuario','i.created_at')
+                            ->where('i.estado','LIKE','%Pendiente%') 
+                            ->where('u.name','LIKE','%'.$query.'%')
+                            
+                    ->orderBy('i.created_at','i.estado','desc')
+                    ->get();
+                    $in = Incidente::all();
+                    if($alert->cantidad <> $in->count()){
+                       
+                        $tam =$in->count()-$alert->cantidad;
+                        $alert->cantidad = $in->count();
+                        $alert->update();
+                        
+                    }
+                    
+                
+                        return view('incidente.index')->with(compact('incidentes','searchText','usuarios','details','tam','sectores'));
+                    
+                
+
+                }else {
+                    $pendiente= '';
+                    $collecion->push( $filtros->combine(['Pendiente',false]));
+                }
+                 if($request->get('Finalizado')){
+                    $collecion->push( $filtros->combine(['Finalizado',true]));
+                }else {
+                    $collecion->push( $filtros->combine(['Finalizado',false]));
+                }
+                 if($request->get('Requisito(Deseo)')){
+                    $collecion->push( $filtros->combine(['Requisito(Deseo)',true]));
+                }else {
+                    $collecion->push( $filtros->combine(['Requisito(Deseo)',false]));
+                }
+                 if($request->get('Sinapuro')){
+                    $collecion->push( $filtros->combine(['Sinapuro',true]));
+                }else {
+                    $collecion->push( $filtros->combine(['Sinapuro',false]));
+                }
+                 if($request->get('Urgente')){
+                    $collecion->push( $filtros->combine(['Urgente',true]));
+                }else {
+                    $collecion->push( $filtros->combine(['Urgente',false]));
+                }
+                foreach ($sectores as $sector) {
+                    if($request->get($sector->id)){
+                        $collecion->push( $filtros->combine([$sector->id,true]));
+                    }else {
+                        $collecion->push( $filtros->combine([$sector->id,false]));
+                    }
+                }
+               
+                $finalizado =  $filtros;
+                $searchText=$query;           
+                 
+                
+                $incidentes=DB::table('incidentes as i')
+                ->join('users as u','i.reporter_id','=','u.id')
+                ->select ( 'i.id','i.nombre','i.estado','i.caracter','u.name as usuario','u.id as idusuario','i.created_at')
+                        
+                        ->where('u.name','LIKE','%'.$query.'%') 
+                        
+                        ->orwhere('u.name','LIKE','%Admin%')
+                        ->where('i.estado','LIKE','%'.$query.'%')
+                        ->orwhere('i.estado','LIKE','%Usuario%')
+                        ->where('i.caracter','LIKE','%'.$query.'%')
+                ->orderBy('i.created_at','i.estado','desc')
+                ->get();
+/*
